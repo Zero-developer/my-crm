@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum OpportunityStage {
+  new
+  screening
+  meeting
+  proposal
+  customer
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String   @map("password_hash")
+  email        String   @unique
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  clientsCreated       Client[]      @relation("ClientCreatedBy")
+  companiesCreated     Company[]     @relation("CompanyCreatedBy")
+  companiesOwned       Company[]     @relation("CompanyOwner")
+  opportunitiesCreated Opportunity[] @relation("OpportunityCreatedBy")
+  opportunitiesOwned   Opportunity[] @relation("OpportunityOwner")
+}
+
+model Client {
+  id           Int      @id @default(autoincrement())
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  email        String?
+  phone        String?
+  jobTitle     String?   @map("job_title")
+  linkedin     String?
+  companyId    Int?      @map("company_id")
+  creationDate DateTime @default(now()) @map("creation_date")
+  createdBy    Int      @map("created_by")
+
+  company      Company?      @relation(fields: [companyId], references: [id])
+  user         User         @relation("ClientCreatedBy", fields: [createdBy], references: [id])
+  opportunities Opportunity[]
+}
+
+model Company {
+  id             Int      @id @default(autoincrement())
+  name           String
+  domainName     String?   @map("domain_name")
+  accountOwnerId Int?      @map("account_owner_id")
+  annualRevenue  Decimal?  @map("annual_revenue") @db.Decimal(15, 2)
+  address        String?
+  linkedin       String?
+  creationDate   DateTime @default(now()) @map("creation_date")
+  createdBy      Int      @map("created_by")
+
+  owner          User?         @relation("CompanyOwner", fields: [accountOwnerId], references: [id])
+  user           User         @relation("CompanyCreatedBy", fields: [createdBy], references: [id])
+  clients        Client[]
+  opportunities  Opportunity[]
+}
+
+model Opportunity {
+  id           Int      @id @default(autoincrement())
+  name         String
+  amount       Decimal?  @db.Decimal(15, 2)
+  stage        OpportunityStage
+  closeDate    DateTime? @map("close_date")
+  companyId    Int?      @map("company_id")
+  clientId     Int?      @map("client_id")
+  ownerId      Int?      @map("owner_id")
+  createdBy    Int      @map("created_by")
+  creationDate DateTime @default(now()) @map("creation_date")
+
+  company      Company? @relation(fields: [companyId], references: [id])
+  client       Client?  @relation(fields: [clientId], references: [id])
+  owner        User?    @relation("OpportunityOwner", fields: [ownerId], references: [id])
+  user         User    @relation("OpportunityCreatedBy", fields: [createdBy], references: [id])
+}
