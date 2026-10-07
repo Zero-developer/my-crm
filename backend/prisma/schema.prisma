@@ -26,6 +26,7 @@ model User {
   passwordHash String   @map("password_hash")
   email        String   @unique
   createdAt    DateTime @default(now()) @map("created_at")
+  deletedAt    DateTime? @map("deleted_at")
 
   clientsCreated       Client[]      @relation("ClientCreatedBy")
   companiesCreated     Company[]     @relation("CompanyCreatedBy")
@@ -45,6 +46,7 @@ model Client {
   companyId    Int?      @map("company_id")
   creationDate DateTime @default(now()) @map("creation_date")
   createdBy    Int      @map("created_by")
+  deletedAt    DateTime? @map("deleted_at")
 
   company      Company?      @relation(fields: [companyId], references: [id])
   user         User         @relation("ClientCreatedBy", fields: [createdBy], references: [id])
@@ -61,6 +63,8 @@ model Company {
   linkedin       String?
   creationDate   DateTime @default(now()) @map("creation_date")
   createdBy      Int      @map("created_by")
+  deletedAt      DateTime? @map("deleted_at")
+
 
   owner          User?         @relation("CompanyOwner", fields: [accountOwnerId], references: [id])
   user           User         @relation("CompanyCreatedBy", fields: [createdBy], references: [id])
@@ -79,6 +83,7 @@ model Opportunity {
   ownerId      Int?      @map("owner_id")
   createdBy    Int      @map("created_by")
   creationDate DateTime @default(now()) @map("creation_date")
+  deletedAt    DateTime? @map("deleted_at")
 
   company      Company? @relation(fields: [companyId], references: [id])
   client       Client?  @relation(fields: [clientId], references: [id])
