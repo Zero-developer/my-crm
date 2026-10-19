@@ -19,8 +19,7 @@ export const createClientSchema = z.object({
     phone: z.string().trim().min(8).max(30).optional(),
     jobTitle: z.string().trim().min(2).optional(),
     linkedin: z.string().trim().min(2).optional(),
-    companyId: z.number().int().min(1).optional(),
-    createdBy: z.number().int().min(1)
+    companyId: z.number().int().min(1).optional()
 }).strict()
 
 export const updateClientSchema = z.object({

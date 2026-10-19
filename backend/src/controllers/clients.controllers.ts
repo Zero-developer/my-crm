@@ -15,13 +15,16 @@ import {
 } from '../validation/clients.validation.js'
 import { z } from 'zod'
 import { AppError } from '../utils/AppError.js';
+import { requireAuthenticatedUser } from '../auth/requireAuthenticated.js';
 
 export async function createClient( req: Request, res: Response, next: NextFunction) {
   try {
 
     const body = createClientSchema.parse(req.body);
 
-    const client = await createClientService(body);
+    const user = requireAuthenticatedUser(req);
+
+    const client = await createClientService(body, user.id);
 
     res.status(201).json(client);
   } catch(error) {
@@ -34,7 +37,9 @@ export async function getClients(req: Request, res: Response, next: NextFunction
 
     const query = paginationSchema.parse(req.query);
 
-    const clients = await getClientsService(query);
+    const user = requireAuthenticatedUser(req)
+
+    const clients = await getClientsService(query, user.id);
 
     res.status(200).json(clients);
 
@@ -51,7 +56,9 @@ export async function searchClient(
 
   try {
 
-    const {filter, value} = searchClientSchema.parse(req.query)
+    const {filter, value} = searchClientSchema.parse(req.query);
+
+    const user = requireAuthenticatedUser(req)
 
     let searchValue: string | number = value;
 
@@ -61,7 +68,8 @@ export async function searchClient(
 
     const client = await searchClientService(
       filter,
-      searchValue
+      searchValue,
+      user.id
     );
 
     if (!client) {
@@ -81,7 +89,9 @@ export async function updateClient(req: Request, res: Response, next: NextFuncti
 
     const body = updateClientSchema.parse(req.body);
 
-    const client = await updateClientService({ id, ...body });
+    const user = requireAuthenticatedUser(req)
+
+    const client = await updateClientService(id, user.id, body);
 
     res.status(200).json(client);
 
@@ -95,7 +105,9 @@ export async function deleteClient(req: Request, res: Response, next: NextFuncti
 
   const id = clientIdSchema.parse(req.params.id);
 
-  const client = await deleteClientService(id);
+  const user = requireAuthenticatedUser(req)
+
+  const client = await deleteClientService(id, user.id);
 
   res.status(200).json(client);
 

@@ -14,11 +14,9 @@ type CreateClientData = {
   jobTitle?: string | undefined;
   linkedin?: string | undefined;
   companyId?: number | undefined;
-  createdBy: number;
 };
 
 type UpdateClientData = {
-  id: number;
   firstName?: string | undefined;
   lastName?: string | undefined;
   email?: string | undefined;
@@ -29,7 +27,7 @@ type UpdateClientData = {
 }
 
 //create a client
-export async function createClientService(data: CreateClientData) {
+export async function createClientService(data: CreateClientData, userId: number) {
 
   const client = await prisma.client.create({
     data: {
@@ -40,7 +38,7 @@ export async function createClientService(data: CreateClientData) {
       ...(data.jobTitle !== undefined && { jobTitle: data.jobTitle }),
       ...(data.linkedin !== undefined && { linkedin: data.linkedin }),
       ...(data.companyId !== undefined && { companyId: data.companyId }),
-      createdBy: data.createdBy,
+      createdBy: userId,
     },
   });
 
@@ -48,25 +46,28 @@ export async function createClientService(data: CreateClientData) {
 }
 
 //search for a client
-export async function searchClientService(filter: ClientFilter, value: string | number) {
+export async function searchClientService(filter: ClientFilter, value: string | number, userId: number) {
+
     const client = await prisma.client.findFirst({
       where: {
         [filter]: value,
-        deletedAt: null
+        deletedAt: null,
+        createdBy: userId
       }
     });
 
     return client
 }
 
-export async function getClientsService(query: PaginationQuery) {
+export async function getClientsService(query: PaginationQuery, userId: number ) {
   const {page, limit} = query;
   const {skip, take} = getPagination(page, limit);
 
   const [clients, total] = await Promise.all([
     prisma.client.findMany({
       where: {
-        deletedAt: null
+        deletedAt: null,
+        createdBy: userId
       },
       orderBy: {
         id: 'asc'
@@ -77,7 +78,8 @@ export async function getClientsService(query: PaginationQuery) {
 
     prisma.client.count({
       where: {
-        deletedAt: null
+        deletedAt: null,
+        createdBy: userId
       }
     })
   ]);
@@ -90,7 +92,7 @@ export async function getClientsService(query: PaginationQuery) {
   };
 }
 
-export async function updateClientService(data: UpdateClientData) {
+export async function updateClientService(id: number, userId: number, data: UpdateClientData) {
   // const { id, ...updateFields } = data;
     //     const cleanData = Object.fromEntries(
   //   Object.entries(updateFields).filter(([_, value]) => value !== undefined)
@@ -98,8 +100,9 @@ export async function updateClientService(data: UpdateClientData) {
   
   const client = prisma.client.update({
     where: {
-      id: data.id,
-      deletedAt: null
+      id: id,
+      createdBy: userId,
+      deletedAt: null,
     },
     data: {
       ...(data.firstName !== undefined && { firstName: data.firstName }),
@@ -115,11 +118,12 @@ export async function updateClientService(data: UpdateClientData) {
   return client
 }
 
-export async function deleteClientService(id: number) {
+export async function deleteClientService(id: number, userId: number) {
   const client = await prisma.client.update({
     where: {
       id,
-      deletedAt: null
+      deletedAt: null,
+      createdBy: userId
     },
     data: {
       deletedAt: new Date()

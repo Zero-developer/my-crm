@@ -2,12 +2,15 @@ import express, { type Express, type Request, type Response } from 'express';
 import { prisma } from './lib/prisma.js';
 import clientsRouter from './routes/clients.routes.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
+import authRouter from './auth/auth.routes.js'
 
 const app: Express = express();
 
 app.use(express.json());
 
 app.use('/api/clients', clientsRouter);
+
+app.use('/api/auth', authRouter);
 
 //health of the api and database
 app.get('/health', async (req: Request, res: Response) => {
