@@ -1,11 +1,14 @@
 import jwt from "jsonwebtoken";
 import {env} from '../config/env.js'
+import { randomUUID } from "node:crypto";
 
 export type PlayloadData = {
     id: number;
     username: string;
     email: string;
 }
+
+export const REFRESH_TOKEN_EXPIRES_IN_SECONDS = Number(env.JWT_REFRESH_TOKEN_EXPIRES_IN) * 24 * 60 * 60;
 
 export const signAccessToken = (playload: PlayloadData) => {
     return jwt.sign(playload, env.JWT_SECRET, {
@@ -23,6 +26,7 @@ export const verifyRefreshToken = (refreshToken: string) => {
 
 export const signRefreshToken = (playload: PlayloadData) => {
     return jwt.sign(playload, env.JWT_SECRET_REFRESH, {
-        expiresIn: env.JWT_REFRESH_TOKEN_EXPIRES_IN,
+        expiresIn: REFRESH_TOKEN_EXPIRES_IN_SECONDS,
+        jwtid: randomUUID(),
     });
 }

@@ -3,20 +3,11 @@ import * as argon2 from "argon2";
 import { AppError } from "../utils/AppError.js";
 import {signAccessToken, signRefreshToken, verifyRefreshToken} from '../utils/jwt.js'
 import {createHash} from 'node:crypto'
-
-export type RegisterData = {
-    username: string;
-    password: string;
-    email: string;
-};
-
-export type LoginData = {
-    email: string;
-    password: string;
-}
+import {env} from '../config/env.js'
+import type {loginData, registerData } from "./auth.validation.js";
 
 function expiresAtRefreshToken() {
-    return new Date(Date.now() + 1 * 24 * 60 * 60 * 1000);
+    return new Date(Date.now() + Number(env.JWT_REFRESH_TOKEN_EXPIRES_IN) * 24 * 60 * 60 * 1000);
 }
 
 function hashRefreshToken(token: string) {
@@ -25,7 +16,7 @@ function hashRefreshToken(token: string) {
         .digest("hex");
 }
 
-export async function registerService(data: RegisterData) {
+export async function registerService(data: registerData) {
     const userExist = await prisma.user.findFirst({
         where: {
             OR: [
@@ -69,7 +60,7 @@ export async function registerService(data: RegisterData) {
     return user;
 }
 
-export async function loginService(data: LoginData) {
+export async function loginService(data: loginData) {
     
     const user = await prisma.user.findUnique({
         where: {
@@ -143,6 +134,7 @@ export async function refreshTokenService(refreshToken: string) {
     const refreshTokenExist = await prisma.refreshToken.findUnique({
         where: {
             tokenHash: tokenHash,
+            revokedAt: null
         },
         include: {
             user: {
@@ -216,6 +208,25 @@ export async function refreshTokenService(refreshToken: string) {
         refreshToken: newRefreshToken
     }
 
+}
+
+export async function logOutService(refreshToken: string) {
+
+    const tokenHash = hashRefreshToken(refreshToken);
+
+    await prisma.refreshToken.updateMany({
+        where: {
+            tokenHash,
+            revokedAt: null
+        },
+        data: {
+            revokedAt: new Date()
+        }
+    });
+
+    return {
+        message: "you succesfully logOut"
+    }
 }
 
 //middleware de autentificacion

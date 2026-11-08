@@ -6,7 +6,7 @@ export const envSchema = z.object({
     JWT_SECRET: z.string().trim().min(32, 'JWT_SECRET must have 32 characters'),
     JWT_SECRET_REFRESH: z.string().trim().min(32, 'JWT_SECRET_REFRESH must have 32 characters'),
     JWT_ACCESS_TOKEN_EXPIRES_IN: z.enum(['5m', '15m', '30m', '1h']).default('15m'),
-    JWT_REFRESH_TOKEN_EXPIRES_IN: z.enum(['1d', '3d', '7d']).default('1d')
+    JWT_REFRESH_TOKEN_EXPIRES_IN: z.enum(['1', '3', '7']).default('1')
 });
 
 const envParsed = envSchema.safeParse(process.env);

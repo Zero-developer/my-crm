@@ -1,11 +1,11 @@
 import {type Response, type Request, type NextFunction } from "express";
-import {registerService, loginService} from './auth.service.js'
-import { AppError } from "../utils/AppError.js";
+import {registerService, loginService, refreshTokenService, logOutService} from './auth.service.js'
+import {loginSchema, registerSchema, refreshTokenSchema} from '../auth/auth.validation.js'
 
 export async function register(req: Request, res: Response, next: NextFunction) {
     try {
         //falta la validacion
-        const validRegisterData = req.body;
+        const validRegisterData = registerSchema.parse(req.body);
 
         const registeredUser = await registerService(validRegisterData);
 
@@ -19,11 +19,37 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     try {
 
         //falta la validacion
-        const validLoginData = req.body;
+        const validLoginData = loginSchema.parse(req.body);
 
         const loginUser = await loginService(validLoginData);
 
         res.status(200).json(loginUser);
+    } catch(error) {
+        next(error)
+    }
+}
+
+export async function refresh(req: Request, res: Response, next: NextFunction) {
+    try {
+        
+        const {refreshToken} = refreshTokenSchema.parse(req.body);
+
+        const result = await refreshTokenService(refreshToken);
+
+        res.status(201).json(result);
+    } catch(error) {
+        next(error);
+    }
+}
+
+export async function logOut(req: Request, res: Response, next: NextFunction) {
+    try {
+
+        const {refreshToken} = refreshTokenSchema.parse(req.body);
+
+        const revokeRefreshToken = await logOutService(refreshToken);
+
+        res.status(200).json(revokeRefreshToken);
     } catch(error) {
         next(error)
     }
